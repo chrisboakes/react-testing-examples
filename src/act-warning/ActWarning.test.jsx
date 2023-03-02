@@ -7,24 +7,46 @@ const clipboardWriteMock = vi
 	.fn()
 	.mockImplementation((v) => Promise.resolve(v));
 
-beforeEach(() => {
-	Object.defineProperty(window.navigator, 'clipboard', {
-		value: { writeText: clipboardWriteMock },
-		configurable: true,
-	});
-});
-
-test('copies text', async () => {
-	render(<ActWarning />);
-
-	const button = screen.getByRole('button', {
-		name: 'Copy',
+describe('act warning tests', () => {
+	beforeAll(() => {
+		Object.defineProperty(window.navigator, 'clipboard', {
+			value: { writeText: clipboardWriteMock },
+			configurable: true,
+		});
 	});
 
-	await userEvent.type(screen.getByLabelText('Type and copy text'), 'foo bar');
-	await userEvent.click(button);
+	beforeEach(() => {
+		render(<ActWarning />);
+	});
 
-	await waitFor(() => {
+	it('throws an act warning', async () => {
+		const button = screen.getByRole('button', {
+			name: 'Copy',
+		});
+
+		await userEvent.type(
+			screen.getByLabelText('Type and copy text'),
+			'foo bar'
+		);
+		await userEvent.click(button);
+
+		// Should wrap the assertion in waitFor
 		expect(clipboardWriteMock).toHaveBeenCalledWith('foo bar');
+	});
+
+	it('does not throw an act warning', async () => {
+		const button = screen.getByRole('button', {
+			name: 'Copy',
+		});
+
+		await userEvent.type(
+			screen.getByLabelText('Type and copy text'),
+			'foo bar'
+		);
+		await userEvent.click(button);
+
+		await waitFor(() => {
+			expect(clipboardWriteMock).toHaveBeenCalledWith('foo bar');
+		});
 	});
 });
